@@ -75,6 +75,8 @@ if current_scene["choices"]:
     for choice_text, next_scene in current_scene["choices"].items():
         if st.button(choice_text):
             go_to_scene(next_scene)
-            st.experimental_rerun()  # Rerun to update the scene
+            # Only call experimental_rerun if available
+            if hasattr(st, "experimental_rerun"):
+                st.experimental_rerun()
 else:
     st.write("The journey is complete. Enjoy your special day!")
