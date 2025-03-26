@@ -1,10 +1,11 @@
 import streamlit as st
 import requests
+import time
 
 # -------------------------
-# Gemini API text generation
+# Function to generate dynamic text messages
 # -------------------------
-def generate_text(prompt):
+def generate_text(prompt, max_retries=3, backoff_factor=2):
     api_key = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
@@ -13,106 +14,111 @@ def generate_text(prompt):
             "parts": [{"text": prompt}]
         }]
     }
-    try:
+    
+    for attempt in range(max_retries):
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        result = response.json()
-        candidates = result.get("candidates", [])
-        if candidates and candidates[0].get("content", {}).get("parts"):
-            return candidates[0]["content"]["parts"][0]["text"]
+        if response.status_code == 200:
+            result = response.json()
+            candidates = result.get("candidates", [])
+            if candidates and candidates[0].get("content", {}).get("parts"):
+                return candidates[0]["content"]["parts"][0]["text"]
+            else:
+                return "Hmm, no message generated."
+        elif response.status_code == 429:
+            wait_time = backoff_factor ** attempt
+            st.warning(f"Rate limit reached. Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)
         else:
-            return "Hmm, I couldn't generate a dynamic response."
-    except Exception as e:
-        return f"[Error with Gemini API: {e}]"
+            return f"Error {response.status_code}: {response.text}"
+    return "[Error: Rate limit exceeded]"
 
 # -------------------------
-# Define game scenes
+# Define game scenes around wishing Nayantara Happy Birthday
 # -------------------------
 SCENES = [
     {
-        "title": "Welcome to the Journey!",
-        "text": ("Hello, adventurer! Today you embark on a wild journey across a fantastical land. "
-                 "Your mission: reach the mystical City of Joy and celebrate your special day with epic cheer. "
-                 "Press 'Start' to begin your adventure."),
-        "choices": {"Start": 1}
+        "title": "Welcome, Nayantara!",
+        "text": (
+            "Happy Birthday, Nayantara! Today, you embark on a magical journey through memories and moments "
+            "that have defined your incredible path. Your mission is to rediscover the joy of your past and embrace "
+            "the bright future ahead. Press 'Begin' to start your adventure."
+        ),
+        "choices": {"Begin": 1}
     },
     {
-        "title": "The Enchanted Forest",
+        "title": "The Memory Forest",
         "text": (
-            "You enter a vibrant forest filled with glowing flora and quirky creatures. "
-            "As you walk, you notice a strange gadget lying on the forest floor—a device that "
-            "converts trash into dazzling art. \n\n"
-            "Gemini says: " + generate_text("Give a funny compliment on inventing a gadget that turns trash into art") +
+            "You wander into a forest where every tree whispers a memory. Along the winding path, you discover a "
+            "mysterious gadget lying beneath an ancient oak—a relic from your past that once sparked your creativity.\n\n"
+            "Nayantara from the past says: " + generate_text("Provide a nostalgic compliment on discovering a magical gadget from your youth for your birthday") +
             "\n\nWhat do you do?"
         ),
         "choices": {
             "Pick up the gadget": 2,
-            "Leave it and explore deeper": 3
+            "Leave it and wander further": 3
         }
     },
     {
-        "title": "Gadget Genius",
+        "title": "Gadget of Memories",
         "text": (
-            "You pick up the gadget and, with your inventive spirit, start tinkering with it. "
-            "Miraculously, the gadget starts transforming discarded plastic into vibrant sculptures! "
-            "The forest creatures cheer and dance around you. \n\n"
-            "Gemini adds: " + generate_text("A witty remark about turning trash into art") +
-            "\n\nFeeling inspired, you continue on your journey."
+            "You pick up the gadget, and as you examine it, memories of youthful adventures flood back. "
+            "The gadget miraculously transforms everyday discarded items into sparkling works of art, as if "
+            "reminiscent of the dreams you once had.\n\n"
+            "Nayantara from the past adds: " + generate_text("Share a witty, heartfelt remark about transforming everyday moments into art for your birthday") +
+            "\n\nInspired, you continue your journey."
         ),
         "choices": {"Continue": 4}
     },
     {
-        "title": "Mystic River",
+        "title": "The Mystic River of Time",
         "text": (
-            "Further along, you arrive at a shimmering river that flows with recycled magic. "
-            "There, you can choose to either help clean the river or simply take a moment to reflect "
-            "by its banks. \n\n"
-            "Gemini notes: " + generate_text("A humorous observation about cleaning a magical river") +
+            "Further along your path, you encounter a shimmering river that flows with the energy of past laughter and "
+            "joy. You sense that this river holds the power to refresh your spirit.\n\n"
+            "Nayantara from the past observes: " + generate_text("Offer a humorous yet reflective comment about the healing power of memories and time on your birthday") +
             "\n\nWhat will you do?"
         ),
         "choices": {
-            "Help clean the river": 5,
-            "Sit and reflect": 6
+            "Help cleanse the river": 5,
+            "Sit and reflect by the water": 6
         }
     },
     {
-        "title": "The City of Joy",
+        "title": "City of Celebrations",
         "text": (
-            "After a long journey filled with wonder and quirky choices, you finally arrive at the City of Joy. "
-            "The streets are vibrant, music fills the air, and people are celebrating life. \n\n"
-            "A wise, friendly bot appears at the central plaza..."
+            "Your journey brings you to a vibrant city pulsing with celebration. Streets are lined with confetti, "
+            "music fills the air, and joyful voices echo in every corner. Here, the spirit of your past and present "
+            "converges in a dazzling festival."
         ),
-        "choices": {"Meet the Bot": 7}
+        "choices": {"Proceed to the Grand Finale": 7}
     },
     {
         "title": "River Revival",
         "text": (
-            "Rolling up your sleeves, you dive into the task of cleaning the river. "
-            "Working together with locals and enchanted creatures, you turn the murky water clear, "
-            "unleashing a burst of rainbow light. \n\n"
-            "Gemini says: " + generate_text("A humorous remark about reviving a magical river") +
-            "\n\nFeeling fulfilled, you resume your journey."
+            "Rolling up your sleeves, you join the locals in cleansing the mystical river. Together, you restore its "
+            "sparkling clarity, releasing a burst of rainbow light that rekindles your inner spark.\n\n"
+            "Nayantara from the past remarks: " + generate_text("A humorous note on how reviving a river is like reviving old joyful memories on your birthday") +
+            "\n\nFeeling rejuvenated, you continue."
         ),
         "choices": {"Continue": 4}
     },
     {
         "title": "Moment of Reflection",
         "text": (
-            "You take a quiet moment by the river, gazing at your reflection and feeling the gentle breeze. "
-            "This pause fills you with clarity and creative energy. \n\n"
-            "Gemini adds: " + generate_text("A light-hearted joke about the power of reflection") +
-            "\n\nRefreshed, you get back on the path."
+            "You pause by the river, taking a quiet moment to reflect on your journey so far. The gentle breeze and "
+            "the soft murmur of water remind you of the laughter and love from days gone by.\n\n"
+            "Nayantara from the past chimes in: " + generate_text("A light-hearted joke about cherishing the sweet moments of life on your birthday") +
+            "\n\nRefreshed, you rise to continue your journey."
         ),
         "choices": {"Continue": 4}
     },
     {
         "title": "The Grand Finale",
         "text": (
-            "At last, you reach the heart of the City of Joy. A cheerful bot awaits you in a plaza adorned "
-            "with balloons and streamers. With a warm smile, the bot says:\n\n"
-            "'Happy Birthday, adventurer! May your journey be filled with laughter, creativity, and endless joy. "
-            "Your spirit lights up the world—keep shining!'\n\n"
-            "Your adventure has reached a joyful conclusion."
+            "At last, you arrive in the central plaza of the City of Celebrations. A warm, friendly bot greets you, "
+            "its voice imbued with the wisdom of years past.\n\n"
+            "'Happy Birthday, Nayantara! Today, you have not only celebrated another year but also rediscovered the magic "
+            "of your journey. May your memories inspire your future and your heart always remain young and full of joy.'\n\n"
+            "Your adventure concludes with a celebration of you—past, present, and future."
         ),
         "choices": {}
     }
@@ -130,7 +136,7 @@ def go_to_scene(scene_index):
 # -------------------------
 # Main UI
 # -------------------------
-st.title("Adventurer's Journey")
+st.title("Nayantara's Birthday Journey")
 
 current_scene = SCENES[st.session_state.scene]
 st.header(current_scene["title"])
@@ -140,5 +146,6 @@ if current_scene["choices"]:
     for label, next_scene in current_scene["choices"].items():
         if st.button(label):
             go_to_scene(next_scene)
+            # The state update will trigger a rerun, no explicit st.experimental_rerun() needed.
 else:
     st.write("The journey is complete. Enjoy your special day!")
