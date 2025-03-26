@@ -3,10 +3,11 @@ import requests
 import time
 
 # -------------------------
-# Function to generate dynamic text messages
+# Function to generate dynamic text messages with retry logic
 # -------------------------
 def generate_text(prompt, max_retries=3, backoff_factor=2):
     api_key = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
+    # Using the Vertex AI REST endpoint for Gemini 2.0 Flash (v1beta)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
     payload = {
@@ -14,7 +15,6 @@ def generate_text(prompt, max_retries=3, backoff_factor=2):
             "parts": [{"text": prompt}]
         }]
     }
-    
     for attempt in range(max_retries):
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 200:
@@ -33,99 +33,105 @@ def generate_text(prompt, max_retries=3, backoff_factor=2):
     return "[Error: Rate limit exceeded]"
 
 # -------------------------
-# Define game scenes around wishing Nayantara Happy Birthday
+# Game Scenes Definition
 # -------------------------
+# Each scene is a dictionary with a title, text, and choices mapping to the next scene index.
 SCENES = [
     {
         "title": "Welcome, Nayantara!",
         "text": (
-            "Happy Birthday, Nayantara! Today, you embark on a magical journey through memories and moments "
-            "that have defined your incredible path. Your mission is to rediscover the joy of your past and embrace "
-            "the bright future ahead. Press 'Begin' to start your adventure."
+            "Happy Birthday, Nayantara! Today you embark on a magical journey to relive your cherished memories "
+            "and embrace a bright future. Your adventure begins now—press 'Begin Adventure' to start."
         ),
-        "choices": {"Begin": 1}
+        "choices": {"Begin Adventure": 1}
     },
     {
-        "title": "The Memory Forest",
+        "title": "Memory Forest",
         "text": (
-            "You wander into a forest where every tree whispers a memory. Along the winding path, you discover a "
-            "mysterious gadget lying beneath an ancient oak—a relic from your past that once sparked your creativity.\n\n"
-            "Nayantara from the past says: " + generate_text("Provide a nostalgic compliment on discovering a magical gadget from your youth for your birthday") +
-            "\n\nWhat do you do?"
+            "You wander into a lush forest where every tree whispers a memory. You spot a curious gadget lying under an ancient oak—"
+            "a relic from your past that once ignited your creativity.\n\n"
+            "Nayantara from the past says: " + generate_text("Offer a nostalgic compliment about discovering a magical gadget in your youth for your birthday") +
+            "\n\nWhat will you do?"
         ),
         "choices": {
             "Pick up the gadget": 2,
-            "Leave it and wander further": 3
+            "Keep walking deeper": 3
         }
     },
     {
         "title": "Gadget of Memories",
         "text": (
-            "You pick up the gadget, and as you examine it, memories of youthful adventures flood back. "
-            "The gadget miraculously transforms everyday discarded items into sparkling works of art, as if "
-            "reminiscent of the dreams you once had.\n\n"
-            "Nayantara from the past adds: " + generate_text("Share a witty, heartfelt remark about transforming everyday moments into art for your birthday") +
-            "\n\nInspired, you continue your journey."
+            "You pick up the gadget and begin to tinker with it. Almost magically, it transforms discarded plastic into dazzling sculptures, "
+            "reminiscent of the dreams and ambitions of your younger days.\n\n"
+            "Nayantara from the past adds: " + generate_text("Share a witty remark on turning everyday discarded items into works of art on your birthday") +
+            "\n\nInspired, you move on."
         ),
         "choices": {"Continue": 4}
     },
     {
-        "title": "The Mystic River of Time",
+        "title": "Mystic River of Time",
         "text": (
-            "Further along your path, you encounter a shimmering river that flows with the energy of past laughter and "
-            "joy. You sense that this river holds the power to refresh your spirit.\n\n"
-            "Nayantara from the past observes: " + generate_text("Offer a humorous yet reflective comment about the healing power of memories and time on your birthday") +
-            "\n\nWhat will you do?"
+            "Further along, you come upon a shimmering river that flows with the essence of past laughter and joy. "
+            "The water glows with memories of celebrations long ago.\n\n"
+            "Nayantara from the past observes: " + generate_text("Make a humorous yet heartfelt comment about the healing power of memories flowing like a river") +
+            "\n\nDo you:"
         ),
         "choices": {
             "Help cleanse the river": 5,
-            "Sit and reflect by the water": 6
+            "Sit and reflect by the river": 6
         }
-    },
-    {
-        "title": "City of Celebrations",
-        "text": (
-            "Your journey brings you to a vibrant city pulsing with celebration. Streets are lined with confetti, "
-            "music fills the air, and joyful voices echo in every corner. Here, the spirit of your past and present "
-            "converges in a dazzling festival."
-        ),
-        "choices": {"Proceed to the Grand Finale": 7}
     },
     {
         "title": "River Revival",
         "text": (
-            "Rolling up your sleeves, you join the locals in cleansing the mystical river. Together, you restore its "
-            "sparkling clarity, releasing a burst of rainbow light that rekindles your inner spark.\n\n"
-            "Nayantara from the past remarks: " + generate_text("A humorous note on how reviving a river is like reviving old joyful memories on your birthday") +
-            "\n\nFeeling rejuvenated, you continue."
+            "Rolling up your sleeves, you help cleanse the river alongside cheerful locals and enchanted creatures. "
+            "As the murky water turns crystal clear, a burst of rainbow light revives your spirit.\n\n"
+            "Nayantara from the past remarks: " + generate_text("Say something humorous about how reviving a river is like rejuvenating old memories on your birthday") +
+            "\n\nFeeling renewed, you continue your journey."
         ),
         "choices": {"Continue": 4}
     },
     {
         "title": "Moment of Reflection",
         "text": (
-            "You pause by the river, taking a quiet moment to reflect on your journey so far. The gentle breeze and "
-            "the soft murmur of water remind you of the laughter and love from days gone by.\n\n"
-            "Nayantara from the past chimes in: " + generate_text("A light-hearted joke about cherishing the sweet moments of life on your birthday") +
-            "\n\nRefreshed, you rise to continue your journey."
+            "You pause at the riverbank, taking a quiet moment to reflect on all the wonderful memories and dreams that have shaped you. "
+            "The gentle breeze and soft murmur of the water fill you with warmth.\n\n"
+            "Nayantara from the past chimes in: " + generate_text("Give a light-hearted joke about cherishing memories and staying young at heart on your birthday") +
+            "\n\nRecharged, you get back on the path."
         ),
         "choices": {"Continue": 4}
     },
     {
-        "title": "The Grand Finale",
+        "title": "City of Celebrations",
         "text": (
-            "At last, you arrive in the central plaza of the City of Celebrations. A warm, friendly bot greets you, "
-            "its voice imbued with the wisdom of years past.\n\n"
-            "'Happy Birthday, Nayantara! Today, you have not only celebrated another year but also rediscovered the magic "
-            "of your journey. May your memories inspire your future and your heart always remain young and full of joy.'\n\n"
-            "Your adventure concludes with a celebration of you—past, present, and future."
+            "You finally arrive at a dazzling city pulsing with festivity. The streets are alive with music, laughter, and vibrant colors. "
+            "In the heart of the city, the spirit of your past and the promise of the future merge into a grand celebration."
+        ),
+        "choices": {"Proceed to the Finale": 7}
+    },
+    {
+        "title": "Grand Finale",
+        "text": (
+            "At the central plaza of the City of Celebrations, a friendly, wise bot greets you with a radiant smile:\n\n"
+            "'Happy Birthday, Nayantara! Today you have journeyed through memories and moments, rediscovering the magic within. "
+            "May your future be as bright and joyful as your spirit, and may your heart always be full of wonder!'\n\n"
+            "Your adventure comes to a joyful close."
         ),
         "choices": {}
     }
 ]
 
 # -------------------------
-# Session State & Navigation
+# Chat History Setup for Extra Interactivity
+# -------------------------
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+def add_chat_message(role, message):
+    st.session_state.chat_history.append((role, message))
+
+# -------------------------
+# Session State for Scene Navigation
 # -------------------------
 if "scene" not in st.session_state:
     st.session_state.scene = 0
@@ -134,18 +140,45 @@ def go_to_scene(scene_index):
     st.session_state.scene = scene_index
 
 # -------------------------
-# Main UI
+# Layout: Choose Adventure Mode or Chat Mode
 # -------------------------
-st.title("Nayantara's Birthday Journey")
+st.sidebar.title("Modes")
+mode = st.sidebar.radio("Select Mode", options=["Adventure", "Chat"])
 
-current_scene = SCENES[st.session_state.scene]
-st.header(current_scene["title"])
-st.write(current_scene["text"])
-
-if current_scene["choices"]:
-    for label, next_scene in current_scene["choices"].items():
-        if st.button(label):
-            go_to_scene(next_scene)
-            # The state update will trigger a rerun, no explicit st.experimental_rerun() needed.
-else:
-    st.write("The journey is complete. Enjoy your special day!")
+if mode == "Adventure":
+    st.title("Nayantara's Birthday Adventure")
+    
+    current_scene = SCENES[st.session_state.scene]
+    st.header(current_scene["title"])
+    st.write(current_scene["text"])
+    
+    if current_scene["choices"]:
+        for label, next_scene in current_scene["choices"].items():
+            if st.button(label):
+                go_to_scene(next_scene)
+                # State change automatically triggers rerun
+    else:
+        st.write("The adventure is complete. Enjoy your special day!")
+    
+elif mode == "Chat":
+    st.title("Chat with Nayantara from the Past")
+    
+    st.write("Type your message below to chat with a version of Nayantara from your past. "
+             "She will respond with memories and wisdom from days gone by.")
+    
+    # Display chat history
+    for role, message in st.session_state.chat_history:
+        if role == "user":
+            st.markdown(f"**You:** {message}")
+        else:
+            st.markdown(f"**Nayantara (past):** {message}")
+    
+    user_input = st.text_input("Your message", key="chat_input")
+    if st.button("Send"):
+        if user_input:
+            add_chat_message("user", user_input)
+            # Use the generation API to get a response tailored to chat context
+            chat_prompt = f"As Nayantara from the past, reply warmly to: {user_input}"
+            response = generate_text(chat_prompt)
+            add_chat_message("bot", response)
+            st.experimental_rerun()  # Force update of chat history
