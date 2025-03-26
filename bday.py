@@ -5,9 +5,7 @@ import requests
 # Gemini API text generation
 # -------------------------
 def generate_text(prompt):
-    # Replace GEMINI_API_KEY with your actual API key
     api_key = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
-    # Using the Vertex AI REST endpoint for Gemini 2.0 Flash (v1beta)
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
     payload = {
@@ -30,8 +28,6 @@ def generate_text(prompt):
 # -------------------------
 # Define game scenes
 # -------------------------
-# Each scene is a dictionary with a title, description, and a dictionary of choices.
-# Choices map button labels to the index of the next scene.
 SCENES = [
     {
         "title": "Welcome to the Journey!",
@@ -144,6 +140,5 @@ if current_scene["choices"]:
     for label, next_scene in current_scene["choices"].items():
         if st.button(label):
             go_to_scene(next_scene)
-            st.experimental_rerun()  # Refresh the app to load the new scene
 else:
     st.write("The journey is complete. Enjoy your special day!")
