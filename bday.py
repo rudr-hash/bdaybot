@@ -1,97 +1,149 @@
 import streamlit as st
 import requests
 
-# Your provided keys
-project_key = "29469650462"
-api_key = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
-
-# Function to call the Gemini API and generate dynamic text.
+# -------------------------
+# Gemini API text generation
+# -------------------------
 def generate_text(prompt):
-    # Construct the Gemini API endpoint URL using your project key and API key.
-    api_url = f"https://gemini.googleapis.com/v1/projects/{project_key}/generateText?key={api_key}"
+    # Replace GEMINI_API_KEY with your actual API key
+    api_key = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
+    # Using the Vertex AI REST endpoint for Gemini 2.0 Flash (v1beta)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
-    data = {
-        "prompt": prompt,
-        "max_tokens": 100  # Adjust token count as needed
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt}]
+        }]
     }
     try:
-        response = requests.post(api_url, json=data, headers=headers)
+        response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
-        generated = response.json().get("generated_text", "")
+        result = response.json()
+        candidates = result.get("candidates", [])
+        if candidates and candidates[0].get("content", {}).get("parts"):
+            return candidates[0]["content"]["parts"][0]["text"]
+        else:
+            return "Hmm, I couldn't generate a dynamic response."
     except Exception as e:
-        generated = f"[Error with Gemini API: {e}]"
-    return generated
+        return f"[Error with Gemini API: {e}]"
 
-# Define the adventure storyline as a list of scenes.
+# -------------------------
+# Define game scenes
+# -------------------------
+# Each scene is a dictionary with a title, description, and a dictionary of choices.
+# Choices map button labels to the index of the next scene.
 SCENES = [
     {
-        "title": "The Beginning",
-        "text": ("Welcome, Nayantara! Today is a very special day—your birthday! "
-                 "Your journey begins in a lush, eco-friendly forest where every leaf recycles itself. "
-                 "The gentle hum of nature welcomes you. Are you ready to begin your adventure?"),
+        "title": "Welcome to the Journey!",
+        "text": ("Hello, adventurer! Today you embark on a wild journey across a fantastical land. "
+                 "Your mission: reach the mystical City of Joy and celebrate your special day with epic cheer. "
+                 "Press 'Start' to begin your adventure."),
         "choices": {"Start": 1}
     },
     {
-        "title": "The Eco-Quest",
-        "text": ("You come across a shimmering river with a twist: it flows with recycled energy. "
-                 "A sign reads: 'Choose your destiny.' Do you:"),
+        "title": "The Enchanted Forest",
+        "text": (
+            "You enter a vibrant forest filled with glowing flora and quirky creatures. "
+            "As you walk, you notice a strange gadget lying on the forest floor—a device that "
+            "converts trash into dazzling art. \n\n"
+            "Gemini says: " + generate_text("Give a funny compliment on inventing a gadget that turns trash into art") +
+            "\n\nWhat do you do?"
+        ),
         "choices": {
-            "Invent a gadget that turns plastic into art": 2,
-            "Devise a plan to clean the river": 3,
-            "Sit and enjoy the moment with a cup of organic coffee": 4
+            "Pick up the gadget": 2,
+            "Leave it and explore deeper": 3
         }
     },
     {
         "title": "Gadget Genius",
-        "text": ("Your inventive spirit shines as you design a quirky device that transforms plastic waste "
-                 "into beautiful sculptures. The forest creatures applaud your creativity. (Gemini says: " +
-                 generate_text("funny compliment on inventing eco-gadgets") + ")"),
-        "choices": {"Continue": 5}
+        "text": (
+            "You pick up the gadget and, with your inventive spirit, start tinkering with it. "
+            "Miraculously, the gadget starts transforming discarded plastic into vibrant sculptures! "
+            "The forest creatures cheer and dance around you. \n\n"
+            "Gemini adds: " + generate_text("A witty remark about turning trash into art") +
+            "\n\nFeeling inspired, you continue on your journey."
+        ),
+        "choices": {"Continue": 4}
+    },
+    {
+        "title": "Mystic River",
+        "text": (
+            "Further along, you arrive at a shimmering river that flows with recycled magic. "
+            "There, you can choose to either help clean the river or simply take a moment to reflect "
+            "by its banks. \n\n"
+            "Gemini notes: " + generate_text("A humorous observation about cleaning a magical river") +
+            "\n\nWhat will you do?"
+        ),
+        "choices": {
+            "Help clean the river": 5,
+            "Sit and reflect": 6
+        }
+    },
+    {
+        "title": "The City of Joy",
+        "text": (
+            "After a long journey filled with wonder and quirky choices, you finally arrive at the City of Joy. "
+            "The streets are vibrant, music fills the air, and people are celebrating life. \n\n"
+            "A wise, friendly bot appears at the central plaza..."
+        ),
+        "choices": {"Meet the Bot": 7}
     },
     {
         "title": "River Revival",
-        "text": ("With determination, you rally the local community to clean the river, turning pollution into pure energy. "
-                 "Your eco-heroism is unmatched. (Gemini notes: " +
-                 generate_text("witty remark about cleaning rivers") + ")"),
-        "choices": {"Continue": 5}
+        "text": (
+            "Rolling up your sleeves, you dive into the task of cleaning the river. "
+            "Working together with locals and enchanted creatures, you turn the murky water clear, "
+            "unleashing a burst of rainbow light. \n\n"
+            "Gemini says: " + generate_text("A humorous remark about reviving a magical river") +
+            "\n\nFeeling fulfilled, you resume your journey."
+        ),
+        "choices": {"Continue": 4}
     },
     {
-        "title": "Moment of Zen",
-        "text": ("You take a moment to relax by the river, sipping your organic coffee. "
-                 "The calm instills a sense of creative wonder. (Gemini adds: " +
-                 generate_text("a light-hearted joke about enjoying nature") + ")"),
-        "choices": {"Continue": 5}
+        "title": "Moment of Reflection",
+        "text": (
+            "You take a quiet moment by the river, gazing at your reflection and feeling the gentle breeze. "
+            "This pause fills you with clarity and creative energy. \n\n"
+            "Gemini adds: " + generate_text("A light-hearted joke about the power of reflection") +
+            "\n\nRefreshed, you get back on the path."
+        ),
+        "choices": {"Continue": 4}
     },
     {
         "title": "The Grand Finale",
-        "text": ("Your journey has led you to a magical clearing where the wise bot awaits. "
-                 "The bot greets you with a warm smile and says: "
-                 "'Happy Birthday, Nayantara! May your ideas flourish like the greenest gardens and your laughter light up every corner of the world!'"),
+        "text": (
+            "At last, you reach the heart of the City of Joy. A cheerful bot awaits you in a plaza adorned "
+            "with balloons and streamers. With a warm smile, the bot says:\n\n"
+            "'Happy Birthday, adventurer! May your journey be filled with laughter, creativity, and endless joy. "
+            "Your spirit lights up the world—keep shining!'\n\n"
+            "Your adventure has reached a joyful conclusion."
+        ),
         "choices": {}
     }
 ]
 
-# Initialize session state for scene tracking.
+# -------------------------
+# Session State & Navigation
+# -------------------------
 if "scene" not in st.session_state:
     st.session_state.scene = 0
 
 def go_to_scene(scene_index):
     st.session_state.scene = scene_index
 
+# -------------------------
 # Main UI
-st.title("Nayantara's Birthday Journey")
+# -------------------------
+st.title("Adventurer's Journey")
 
 current_scene = SCENES[st.session_state.scene]
-
 st.header(current_scene["title"])
 st.write(current_scene["text"])
 
 if current_scene["choices"]:
-    for choice_text, next_scene in current_scene["choices"].items():
-        if st.button(choice_text):
+    for label, next_scene in current_scene["choices"].items():
+        if st.button(label):
             go_to_scene(next_scene)
-            # Only call experimental_rerun if available.
-            if hasattr(st, "experimental_rerun"):
-                st.experimental_rerun()
+            st.experimental_rerun()  # Refresh the app to load the new scene
 else:
     st.write("The journey is complete. Enjoy your special day!")
